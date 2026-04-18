@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useHistory, useLocation } from "react-router-dom";
 import { Button, Card, Container, Form } from "react-bootstrap";
 import { api } from "../../Services/api";
@@ -7,12 +7,19 @@ import { useAuth } from "../../Context/AuthContext";
 function Login() {
   const history = useHistory();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const redirectTo = location.state?.from || "/web";
+      history.replace(redirectTo);
+    }
+  }, [history, isAuthenticated, location.state]);
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -22,8 +29,6 @@ function Login() {
     try {
       const data = await api.login(form);
       login(data);
-      const redirectTo = location.state?.from || "/web";
-      history.push(redirectTo);
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {
